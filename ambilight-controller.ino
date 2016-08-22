@@ -25,8 +25,17 @@ void setup() {
 }
 
 void loop() {
+  //Read both potentiometers
   dimFactor = analogRead(dimPot)/1023.0;        //The .0 is to wake-up the compiler to make this a float-division instead of an int-division :)
-  colorTemp = (analogRead(tempPot)*4+1000)/100;
+  colorTemp = (analogRead(tempPot)*4+1000);
+  
+  //debug
+  Serial.print("colorTemp: ");
+  Serial.print(colorTemp);
+  Serial.print("; dimFactor: ");
+  Serial.println(dimFactor);
+  
+  colorTemp = colorTemp/100;
 
   //Calculate Red
   if(colorTemp<=66) {
@@ -68,15 +77,18 @@ void loop() {
       if(blueAmount>255) { blueAmount = 255; }
     }
   }
-  Serial.println(dimFactor);
+
+  //Combine the calculated color values with the dimming factor:
   redAmount = redAmount * dimFactor;
   greenAmount = greenAmount * dimFactor;
   blueAmount = blueAmount * dimFactor;
-  
+
+  //Round the float values to ints so they can be analogWrite'd
   int redOut = round(redAmount);
   int greenOut = round(greenAmount);
   int blueOut = round(blueAmount);
-  
+
+  //Output to the LED-strip
   analogWrite(RED, redOut);
   analogWrite(GREEN, greenOut);
   analogWrite(BLUE, blueOut);
