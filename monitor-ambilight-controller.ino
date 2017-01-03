@@ -1,9 +1,14 @@
-#include <math.h>
+#include <math.h> //this library is needed for the mathematics behind the color temperature -> RGB values calculations
+//Credits for the 'color temperature -> RGB values'-formulas go to http://www.tannerhelland.com/4435/convert-temperature-rgb-algorithm-code/
+//I only converted it to Arduino-compatible Objective C.
 
+//Output pins:
 const int GREEN = 3;
 const int RED = 5;
 const int BLUE = 9;
+//Pin 3, 5 and 9 are PWM enabled pins on the Arduino Pro Mini I used. You SHOULD use pins that are PWM enabled.
 
+//Input pins:
 const int tempPot = A0;
 const int dimPot = A1;
 
@@ -15,7 +20,7 @@ float greenAmount;
 float blueAmount;
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(9600); //needed for debug
   pinMode(GREEN, OUTPUT);
   pinMode(RED, OUTPUT);
   pinMode(BLUE, OUTPUT);
@@ -26,16 +31,16 @@ void setup() {
 
 void loop() {
   //Read both potentiometers
-  dimFactor = analogRead(dimPot)/1023.0;        //The .0 is to wake-up the compiler to make this a float-division instead of an int-division :)
-  colorTemp = (analogRead(tempPot)*4+1000);
+  dimFactor = analogRead(dimPot)/1023.0;        //The .0 is a wake-up to the compiler to make this a float-operation instead of an int-operation
+  colorTemp = (analogRead(tempPot)*4+1000);     //This gives a minimum of 1000K and a maximum of 5092K
   
   //debug
   Serial.print("colorTemp: ");
   Serial.print(colorTemp);
-  Serial.print("; dimFactor: ");
+  Serial.print(", dimFactor: ");
   Serial.println(dimFactor);
   
-  colorTemp = colorTemp/100;
+  colorTemp = colorTemp/100;  //colorTemp should be given in 10^2K, so for a 4500K color temperature the value of colorTemp would be 45
 
   //Calculate Red
   if(colorTemp<=66) {
@@ -83,7 +88,7 @@ void loop() {
   greenAmount = greenAmount * dimFactor;
   blueAmount = blueAmount * dimFactor;
 
-  //Round the float values to ints so they can be analogWrite'd
+  //Round the float values to ints so they can be analogWritten
   int redOut = round(redAmount);
   int greenOut = round(greenAmount);
   int blueOut = round(blueAmount);
