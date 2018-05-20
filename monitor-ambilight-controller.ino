@@ -32,69 +32,57 @@ void setup() {
 void loop() {
   //Read both potentiometers
   dimFactor = analogRead(dimPot)/1023.0;        //The .0 is a wake-up to the compiler to make this a float-operation instead of an int-operation
-  colorTemp = (analogRead(tempPot)*4+1000);     //This gives a minimum of 1000K and a maximum of 5092K
+  colorTemp = 1000 + analogRead(tempPot)*6;     //This gives a minimum of 1000K and a maximum of 7144K
   
   //debug
   Serial.print("colorTemp: ");
   Serial.print(colorTemp);
   Serial.print(", dimFactor: ");
-  Serial.println(dimFactor);
-  
-  colorTemp = colorTemp/100;  //colorTemp should be given in 10^2K, so for a 4500K color temperature the value of colorTemp would be 45
+  Serial.print(dimFactor);
+  Serial.print("; ");
 
   //Calculate Red
-  if(colorTemp<=66) {
-    redAmount = 255;  
-  }
-  else {
-    redAmount = colorTemp - 60;
-    redAmount = 329.698727446 * pow(redAmount, -0.1332047592);
-    if(redAmount<0) { redAmount = 0; }
-    if(redAmount>255) { redAmount = 255; }
+  if (colorTemp <= 6600) {
+    redAmount = 255;
+  } else {
+    redAmount = 608.873 / pow(colorTemp-6000, 0.136);
   }
 
   //Calculate Green
-  if(colorTemp<=66) {
-    greenAmount = colorTemp;
-    greenAmount = 99.4708025861 * log(greenAmount) - 161.1195681661;
-    if(greenAmount<0) { greenAmount = 0; }
-    if(greenAmount>255) { greenAmount = 255; }
-  }
-  else {
-    greenAmount = colorTemp - 60;
-    greenAmount = 288.1221695283 * pow(greenAmount, -0.0755148492);
-    if(greenAmount<0) { greenAmount = 0; }
-    if(greenAmount>255) { greenAmount = 255; }
+  if (colorTemp <= 6600) {
+    greenAmount = 135 * log(colorTemp) - 932.5;
+  } else {
+    greenAmount = 413 / pow(colorTemp-6000, 0.0755);
   }
 
   //Calculate Blue
-  if(colorTemp>=66) {
+  if (colorTemp >= 6600) {
     blueAmount = 255;
-  }
-  else {
-    if(colorTemp<=19) {
+  } else {
+    if (colorTemp <= 1900) {
       blueAmount = 0;
-    }
-    else {
-      blueAmount = colorTemp - 10;
-      blueAmount = 138.5177312231 * log(blueAmount) - 305.0447927307;
-      if(blueAmount<0) { blueAmount = 0; }
-      if(blueAmount>255) { blueAmount = 255; }
+    } else {
+      blueAmount = 0.0543 * colorTemp - 103.085;
     }
   }
 
-  //Combine the calculated color values with the dimming factor:
-  redAmount = redAmount * dimFactor;
-  greenAmount = greenAmount * dimFactor;
-  blueAmount = blueAmount * dimFactor;
-
+  //Combine the calculated color values with the dimFactor
   //Round the float values to ints so they can be analogWritten
-  int redOut = round(redAmount);
-  int greenOut = round(greenAmount);
-  int blueOut = round(blueAmount);
+  int redOut = round(redAmount * dimFactor);
+  int greenOut = round(greenAmount * dimFactor);
+  int blueOut = round(blueAmount * dimFactor);
+
+  Serial.print("rgb(");
+  Serial.print(redOut);
+  Serial.print(", ");
+  Serial.print(greenOut);
+  Serial.print(", ");
+  Serial.print(blueOut);
+  Serial.println(")");
 
   //Output to the LED-strip
   analogWrite(RED, redOut);
   analogWrite(GREEN, greenOut);
   analogWrite(BLUE, blueOut);
+  delay(5);
 }
